@@ -2,12 +2,12 @@
 <odoo>
     <data noupdate="1">
 
-        <record id="payment.payment_acquirer_promtpayqr" model="payment.acquirer">
-            <field name="name">PromtpayQR</field>
-            <field name="image" type="base64" file="payment_promtpayqr/static/src/img/transfer_icon.png"/>
-            <field name="provider">promtpayqr</field>
+        <record id="payment.payment_acquirer_promptpayqr" model="payment.acquirer">
+            <field name="name">promptpayQR</field>
+            <field name="image" type="base64" file="payment_promptpayqr/static/src/img/transfer_icon.png"/>
+            <field name="provider">promptpayqr</field>
             <field name="company_id" ref="base.main_company"/>
-            <field name="view_template_id" ref="promtpayqr_acquirer_button"/>
+            <field name="view_template_id" ref="promptpayqr_acquirer_button"/>
             <field name="auto_confirm">none</field>
             <field name="environment">test</field>
             <field name="website_published" eval="True"/>
@@ -16,7 +16,7 @@
             </field>
             <field name="description" type="html">
             <p>
-                A payment gateway for Thai citizen. Using PromtPay ID.
+                A payment gateway for Thailand citizen. Using promptPay ID.
             </p>
             <ul class="list-inline">
                 <li><i class="fa fa-check"/>eCommerce</li>
@@ -24,17 +24,49 @@
         </field>
         </record>
 
-        <template id="report_invoice">
-            <t t-call="report.html_container">
-                <t t-foreach="docs" t-as="o">
-                    <t t-call="report.external_layout">
-                        <div class="page">
-                            <h2>Report title</h2>
-                            <p>This object's name is <span t-field="o.name"/></p>
-                        </div>
-                    </t>
+        <template id="payment.payment_acquirer_display" inherit_id="sale.report_saleorder_document">
+            <xpath expr="//div[@name='total']" position="after">
+                <t t-if="doc.payment_acquirer_id.name">
+                    <table class="table table-condensed mt32 mb32">
+                        <thead>
+                            <tr>
+                                <th>Payment Information</th>
+                                <th class="text-right">Total</th>
+                            </tr>
+                    </thead>
+                    <tbody class="sale_tbody">
+                            <tr>
+                                <td>
+                                    <strong>Payment Metjjjhod:</strong> <t t-esc="doc.payment_acquirer_id.name"/><br />
+                                    <strong>Payment Sthatus:</strong>
+                                    <strong>Payment Sthajtus:</strong>
+                                    <t t-if="doc.payment_acquirer_id.auto_confirm == 'none'">
+                                        <t t-raw="doc.payment_acquirer_id.pending_msg"/>
+                                    </t>
+                                    <t t-if="doc.payment_acquirer_id.auto_confirm in ['confirm_so', 'generate_and_pay_invoice']">
+                                        <t t-if="doc.payment_tx_id.state == 'pending'">
+                                            <t t-raw="doc.payment_acquirer_id.pending_msg"/>
+                                        </t>
+                                        <t t-if="doc.payment_tx_id.state in ['done', 'authorized']">
+                                            <t t-raw="doc.payment_acquirer_id.done_msg"/>
+                                        </t>
+                                        <t t-if="doc.payment_tx_id.state == 'cancel'">
+                                            <t t-raw="doc.payment_acquirer_id.cancel_msg"/>
+                                        </t>
+                                        <t t-if="doc.payment_tx_id.state == 'error'">
+                                            <t t-raw="doc.payment_acquirer_id.error_msg"/>
+                                        </t>
+                                    </t>
+                                </td>
+                                <td class="text-right">
+                                    <span t-field="doc.amount_total"
+                                        t-options='{"widget": "monetary", "display_currency": doc.pricelist_id.currency_id}'/>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </t>
-            </t>
+            </xpath>
         </template>
     </data>
 </odoo>

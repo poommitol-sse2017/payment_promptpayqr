@@ -3,6 +3,7 @@
 from odoo import models, fields, api
 from odoo.addons.payment.models.payment_acquirer import ValidationError
 from odoo.tools.float_utils import float_compare
+from odoo.tools.translate import _
 
 import logging
 import pprint
@@ -13,16 +14,17 @@ import base64
 
 _logger = logging.getLogger(__name__)
 
-class PromtpayPaymentAcquirer(models.Model):
+class PromptpayPaymentAcquirer(models.Model):
     _inherit = 'payment.acquirer'
 
-    provider = fields.Selection(selection_add=[('promtpayqr', 'Promtpay QR')])
+    provider = fields.Selection(selection_add=[('promptpayqr', 'Promptpay QR')])
 
-    def promtpayqr_get_form_action_url(self):
-        _logger.info("getting URL for Promtpay")
-        return '/payment/promtpay/feedback'
+    def promptpayqr_get_form_action_url(self):
+        _logger.info("getting URL for promptpay")
+        return '/payment/promptpay/feedback'
 
     def _format_transfer_data(self):
+        _logger.info("Thank msg")
         company_id = self.env.user.company_id.id
         # filter only bank accounts marked as visible
         journals = self.env['account.journal'].search([('type', '=', 'bank'), ('display_on_footer', '=', True), ('company_id', '=', company_id)])
@@ -46,16 +48,16 @@ class PromtpayPaymentAcquirer(models.Model):
         """ Hook in create to create a default post_msg. This is done in create
         to have access to the name and other creation values. If no post_msg
         or a void post_msg is given at creation, generate a default one. """
-        if values.get('provider') == 'promtpayqr' and not values.get('post_msg'):
+        if values.get('provider') == 'promptpayqr' and not values.get('post_msg'):
             values['post_msg'] = self._format_transfer_data()
-        return super(PromtpayPaymentAcquirer, self).create(values)
+        return super(PromptpayPaymentAcquirer, self).create(values)
 
 
-class PromtpayPaymentTransaction(models.Model):
+class PromptpayPaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
 
     @api.model
-    def _promtpayqr_form_get_tx_from_data(self, data):
+    def _promptpayqr_form_get_tx_from_data(self, data):
         reference, amount, currency_name = data.get('reference'), data.get('amount'), data.get('currency_name')
         tx = self.search([('reference', '=', reference)])
         if not tx or len(tx) > 1:
@@ -80,15 +82,15 @@ class PromtpayPaymentTransaction(models.Model):
         qr.make(fit=True)
         qr_pic = qr.make_image()
         f = tempfile.TemporaryFile(mode="r+")
-        qr_pic.save('/home/w-lent/tmp/generated_qrcode.png','png')
+        qr_pic.save('/tmp/generated_qrcode.png','png')
         f.seek(0)
-        _logger.info("Successed saving...QR?")
+        _logger.info("Successed saving...QR? /tmp/generated_qrcode.png")
         
         qr_pic1 = base64.encodestring(f.read())            
 
         return tx
 
-    def _promtpayqr_form_get_invalid_parameters(self, data):
+    def _promptpayqr_form_get_invalid_parameters(self, data):
         invalid_parameters = []
         _logger.info("try to invalid")
         if float_compare(float(data.get('amount', '0.0')), self.amount, 2) != 0:
@@ -98,6 +100,6 @@ class PromtpayPaymentTransaction(models.Model):
 
         return invalid_parameters
 
-    def _promtpayqr_form_validate(self, data):
+    def _promptpayqr_form_validate(self, data):
         _logger.info('Validated transfer payment for tx %s: set as pending' % (self.reference))
         return self.write({'state': 'pending'})
