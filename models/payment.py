@@ -5,8 +5,10 @@ from odoo.addons.payment.models.payment_acquirer import ValidationError
 from odoo.tools.float_utils import float_compare
 from odoo.tools.translate import _
 
+import crc16pure
 import logging
 import pprint
+
 
 _logger = logging.getLogger(__name__)
 
@@ -76,11 +78,8 @@ class PromptpayPaymentTransaction(models.Model):
         ### ! open for improvement !####
         # Unknow bug, the promptpay_id should be accessible by using self.acquirer_id.promptpay_id
         tx_prompt_id = self.acquirer_id.search([('promptpay_id', '!=', '')], limit=1)['promptpay_id']
-        
-        ########## current work here! ###############
-        # TODO  implement promptpay qrcode conversion from promptpay_id and amount
-        qr_string = str(reference)+','+str(tx_prompt_id)+','+str(amount)+','+str(currency_name)
-        
+        qr_string = self._get_promptpayqr_str(str(tx_prompt_id),str(amount))
+       
         # for passing QRcode string to view
         tx['promptpay_qrcode'] = str(qr_string)
         return tx
@@ -97,3 +96,39 @@ class PromptpayPaymentTransaction(models.Model):
     def _promptpayqr_form_validate(self, data):
         _logger.info('Validated transfer payment for tx %s: set as pending' % (self.reference))
         return self.write({'state': 'pending'})
+
+    def _get_promptpayqr_str(self,acc_id,amount):
+        promptpay_acc_id = ""
+        promptpay_amount = ""
+        promptpay_chksum = ""
+
+        if len(acc_id) == 15:
+            promptpay_acc_id = "0315" + acc_id
+        elif len(acc_id) == 13:
+            promptpay_acc_id = "0213" + acc_id
+        elif len(acc_id) == 10:
+            promptpay_acc_id = "01130066" + acc_id[1:]
+        else:
+            error_msg = "Invalid PromptPay ID"
+            _logger.info(error_msg)
+            raise ValidationError(error_msg)
+
+        if len(amount) > 0 and len(amount) < 10:
+            promptpay_amount = '540' + str(len(amount)) + amount
+        elif len(amount) > 0 and len(amount) >= 10:
+            promptpay_amount = '54' + str(len(amount)) + amount  
+        else:
+            promptpay_amount = ''
+        # _ = emvco
+        _version = '000201'
+        _qr_type = '010211'
+        app = '0016A000000677010111' + promptpay_acc_id
+        _merchant = '29' + str(len(app)) + app
+        _country = '5802TH'
+        _currency = '5303764'
+        _chksum = '6304'
+
+        promptpay_qr_str = _version + _qr_type  + _merchant + _country + promptpay_amount + _currency  + _chksum
+        crc16_chksum = hex(crc16pure.crc16xmodem(promptpay_qr_str,0xffff))[2:]
+        promptpay_qr_str = promptpay_qr_str + crc16_chksum
+        return promptpay_qr_str
