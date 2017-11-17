@@ -7,18 +7,21 @@ from odoo.tools.translate import _
 
 import logging
 import pprint
-import qrcode
-import tempfile
-
-import base64
 
 _logger = logging.getLogger(__name__)
 
 class PromptpayPaymentAcquirer(models.Model):
     _inherit = 'payment.acquirer'
-
     provider = fields.Selection(selection_add=[('promptpayqr', 'Promptpay QR')])
-
+    
+    # property for ir.view
+    promptpay_id = fields.Char('PromptPay ID', required_if_provider='promptpayqr', groups='base.group_user',
+                help='The PromptPay ID is a National ID or Mobile phone Number.')
+    promptpay_account_name = fields.Char('Account Name', required_if_provider='promptpayqr', groups='base.group_user',
+                help='The name of bank account holder')
+    promptpay_account_number = fields.Char('Account Number', required_if_provider='promptpayqr', groups='base.group_user',
+                help='The account number of bank account holder')
+    
     def promptpayqr_get_form_action_url(self):
         _logger.info("getting URL for promptpay")
         return '/payment/promptpay/feedback'
@@ -32,12 +35,12 @@ class PromptpayPaymentAcquirer(models.Model):
         bank_title = _('Bank Accounts') if len(accounts) > 1 else _('Bank Account')
         bank_accounts = ''.join(['<ul>'] + ['<li>%s</li>' % name for id, name in accounts] + ['</ul>'])
         post_msg = _('''<div>
-<h3>Please use the following transfer details</h3>
-<h4>%(bank_title)s</h4>
-%(bank_accounts)s
-<h4>Communication</h4>
-<p>Please use the order name as communication reference.</p>
-</div>''') % {
+            <h3>Please use the following transfer details</h3>
+            <h4>%(bank_title)s</h4>
+            %(bank_accounts)s
+            <h4>Communication</h4>
+            <p>Please use the order name as communication reference.</p>
+            </div>''') % {
             'bank_title': bank_title,
             'bank_accounts': bank_accounts,
         }
@@ -55,10 +58,11 @@ class PromptpayPaymentAcquirer(models.Model):
 
 class PromptpayPaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
-
+    promptpay_qrcode = fields.Char('QRcode', default='Initial QR',required=True, help='Internal reference of the TX')
+    
     @api.model
     def _promptpayqr_form_get_tx_from_data(self, data):
-        reference, amount, currency_name = data.get('reference'), data.get('amount'), data.get('currency_name')
+        reference, amount, currency_name,  = data.get('reference'), data.get('amount'), data.get('currency')
         tx = self.search([('reference', '=', reference)])
         if not tx or len(tx) > 1:
             error_msg = _('received data for reference %s') % (pprint.pformat(reference))
@@ -68,31 +72,21 @@ class PromptpayPaymentTransaction(models.Model):
                 error_msg += _('; multiple order found')
             _logger.info(error_msg)
             raise ValidationError(error_msg)
-        _logger.info("Successed getting tx")
-        lf ='\n'
-        qr_string = lf.join([str(reference),str(amount),str(currency_name)])
-        qr = qrcode.QRCode(
-            version=1,
-            error_correction=qrcode.constants.ERROR_CORRECT_M,
-            box_size=5,
-            border=4,
-        )
-        _logger.info("Successed saving...QR___1?")
-        qr.add_data(qr_string)
-        qr.make(fit=True)
-        qr_pic = qr.make_image()
-        f = tempfile.TemporaryFile(mode="r+")
-        qr_pic.save('/tmp/generated_qrcode.png','png')
-        f.seek(0)
-        _logger.info("Successed saving...QR? /tmp/generated_qrcode.png")
+       
+        ### ! open for improvement !####
+        # Unknow bug, the promptpay_id should be accessible by using self.acquirer_id.promptpay_id
+        tx_prompt_id = self.acquirer_id.search([('promptpay_id', '!=', '')], limit=1)['promptpay_id']
         
-        qr_pic1 = base64.encodestring(f.read())            
-
+        ########## current work here! ###############
+        # TODO  implement promptpay qrcode conversion from promptpay_id and amount
+        qr_string = str(reference)+','+str(tx_prompt_id)+','+str(amount)+','+str(currency_name)
+        
+        # for passing QRcode string to view
+        tx['promptpay_qrcode'] = str(qr_string)
         return tx
 
     def _promptpayqr_form_get_invalid_parameters(self, data):
         invalid_parameters = []
-        _logger.info("try to invalid")
         if float_compare(float(data.get('amount', '0.0')), self.amount, 2) != 0:
             invalid_parameters.append(('amount', data.get('amount'), '%.2f' % self.amount))
         if data.get('currency') != self.currency_id.name:

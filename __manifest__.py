@@ -10,6 +10,7 @@
     'depends': ['payment'],
     'data': [
         'views/promptpayqr_transfer_template.xml',
+        'views/promptpayqr_view.xml',
         'data/payment_acquirer_data.xml',
     ],
     'installable': True,
