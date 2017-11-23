@@ -10,8 +10,8 @@
             <field name="view_template_id" ref="promptpayqr_acquirer_button"/>
             <field name="auto_confirm">none</field>
             <field name="environment">test</field>
-            <field name="promptpay_id">dummyid</field>
-            <field name="promptpay_account_name">dummyid</field>
+            <field name="promptpay_id">0123456789</field>
+            <field name="promptpay_account_name">initial_id</field>
             <field name="promptpay_account_number">0123456789</field>        
             <field name="website_published" eval="True"/>
             <field name="pre_msg"><![CDATA[<p>Transfer information will be provided after choosing the payment method.</p>]]>

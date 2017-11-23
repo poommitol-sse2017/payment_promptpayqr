@@ -12,7 +12,9 @@
         'views/promptpayqr_transfer_template.xml',
         'views/promptpayqr_view.xml',
         'data/payment_acquirer_data.xml',
+        'security/ir.model.access.csv',
+        'security/payment_security.xml',
     ],
     'installable': True,
-    'auto_install': True,
+    'auto_install': False,
 }
