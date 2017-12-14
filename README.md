@@ -4,6 +4,9 @@ This is the part of SOFTWARE ENGINEERING subject's project, TGGS KMUTNB THAILAND
 The propose of this work is only for education.
 
 #Changelog
+
+[1.0.5] - 2017-12-15
+-added testing files
 [1.0.4] - 2017-11-23
 -fix minor files issue
 [1.0.3] - 2017-11-17
