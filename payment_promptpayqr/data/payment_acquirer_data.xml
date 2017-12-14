@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- default record data  -->
+        <record id="payment.payment_acquirer_promptpayqr" model="payment.acquirer">
+            <field name="name">PromptPayQR</field>
+            <field name="image" type="base64" file="payment_promptpayqr/static/src/img/transfer_icon.png"/>
+            <field name="provider">promptpayqr</field>
+            <field name="company_id" ref="base.main_company"/>
+            <field name="view_template_id" ref="promptpayqr_acquirer_button"/>
+            <field name="auto_confirm">none</field>
+            <field name="environment">test</field>
+            <field name="promptpay_id">0000000000</field>
+            <field name="promptpay_account_name">DO NOT TRANSFER TO THIS IS ACCOUNT,PLEASE CONTACT SITE ADMINISTRATOR!</field>
+            <field name="promptpay_account_number">0123456789</field>        
+            <field name="website_published" eval="True"/>
+            <field name="pre_msg"><![CDATA[<p>Transfer information will be provided after choosing the payment method.</p>]]>
+            </field>
+            <field name="description" type="html">
+                <p>
+                    A payment gateway for Thailand citizen. Using PromptPay ID.
+                </p>
+                <ul class="list-inline">
+                    <li><i class="fa fa-check"/>eCommerce</li>
+                </ul>
+            </field>
+        </record>
+    </data>
+</odoo>

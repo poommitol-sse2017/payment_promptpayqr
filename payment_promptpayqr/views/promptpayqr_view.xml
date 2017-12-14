@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+    <!-- ir.ui.view confidential information -->
+    <record id="acquirer_form_promptpay" model="ir.ui.view">
+            <field name="name">acquirer.form.promptpay</field>
+            <field name="model">payment.acquirer</field>
+            <field name="inherit_id" ref="payment.acquirer_form"/>
+            <field name="arch" type="xml">
+                <xpath expr='//group[@name="acquirer"]' position='after'>
+                    <group attrs="{'invisible': [('provider', '!=', 'promptpayqr')]}">
+                        <field name="promptpay_id"/>
+                        <field name="promptpay_account_name"/>
+                        <!--field name="promptpay_account_number"/-->
+                    </group>
+                </xpath>
+            </field>
+        </record>
+    </data>
+</odoo>

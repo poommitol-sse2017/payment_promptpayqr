@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        
+        <!-- Button template -->
+        <template id="promptpayqr_acquirer_button">
+            <form t-if="acquirer" t-att-action="tx_url" method="post" target="_self">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
+                <t t-if="return_url">
+                    <input type='hidden' name='return_url' t-att-value='return_url'/>
+                </t>
+                <input type='hidden' name='reference' t-att-value='reference'/>
+                <input type='hidden' name='amount' t-att-value='amount'/>
+                <input type='hidden' name='currency' t-att-value='currency.name'/>
+                
+                <!-- submit -->
+                <button type="submit" width="100px" t-att-class="submit_class">
+                    <img t-if="not submit_txt" src="/payment_promptpayqr/static/src/img/transfer_icon.png"/>
+                    <span t-if="submit_txt"><t t-esc="submit_txt"/> <span class="fa fa-long-arrow-right"/></span>
+                </button>
+            </form>
+        </template>
+
+        <!-- Report template (pdf) -->
+        <template id="payment.payment_acquirer_document" inherit_id="sale.report_saleorder_document">
+            <xpath expr="//div[@name='total']" position="after">
+                <t t-if="doc.payment_acquirer_id.name == 'PromptPayQR'">
+                    <table class="table">
+                        <td>
+                            <img src="/payment_promptpayqr/static/src/img/promptpay_200px.jpg"/><br/>                 
+                            <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s'%('QR', doc.payment_tx_id.promptpay_qrcode , 200, 200)"/>                                    
+                        </td>
+                        <td colspan="2">
+                            <text></text><br/>
+                            <strong>PromptPay ID:</strong>
+                            <t t-esc="doc.payment_acquirer_id.promptpay_id" /><br/>
+                            <strong>Acount Title:</strong>
+                            <t t-esc="doc.payment_acquirer_id.promptpay_account_name" /><br/>
+                            <!--strong>Acount Number:</strong>
+                            <t t-esc="doc.payment_acquirer_id.promptpay_account_number" /><br/-->         
+                        </td>
+                    </table>
+                </t>
+            </xpath>
+        </template>
+
+        <!-- Web display template -->
+        <template id="payment.payment_acquirer_web_display" inherit_id="website_sale.confirmation">
+            <xpath expr="//strong[contains(text(),'Payment Method:')]/ancestor::tbody" position="after">
+                <t t-if="order.payment_acquirer_id.name == 'PromptPayQR'">
+                    <table class="table">
+                        <td>
+                            <img src="/payment_promptpayqr/static/src/img/promptpay_200px.jpg"/><br/>                 
+                            <img t-att-src="'/report/barcode/?type=%s&amp;value=%s&amp;width=%s&amp;height=%s'%('QR', order.payment_tx_id.promptpay_qrcode , 200, 200)"/>                                    
+                        </td>
+                        <td colspan="2">
+                            <text></text><br/>
+                            <strong>PromptPay ID:</strong>
+                            <t t-esc="order.payment_acquirer_id.promptpay_id" /><br/>
+                            <strong>Acount Title:</strong>
+                            <t t-esc="order.payment_acquirer_id.promptpay_account_name" /><br/>
+                            <!--strong>Acount Number:</strong>
+                            <t t-esc="order.payment_acquirer_id.promptpay_account_number" /><br/-->                          
+                        </td>
+                    </table>
+                </t>
+            </xpath>
+        </template>
+        
+    </data>
+</odoo>
