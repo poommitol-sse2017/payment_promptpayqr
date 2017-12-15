@@ -3,7 +3,7 @@
 {
     'name': "PromptPayQR Payment Acquirer",
     'summary': 'PromptPayQR Payment Acquirer: implementation',
-    'description': """Transfer Payment Acquirer using PromptPay QR code format""",
+    'description': """Transfer Payment Acquirer using PromptPay QR code format aas""",
     'author': "Poommitol Chaicherdkiat, Nayan Chandra Nath",
     'category': 'Accounting',
     'version': '0.1',
