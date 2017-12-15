@@ -15,6 +15,9 @@
         'security/ir.model.access.csv',
         'security/payment_security.xml',
     ],
+    'images': [
+        'static/src/img/promptpay_200px.jpg',
+    ],
     'installable': True,
     'auto_install': False,
 }
