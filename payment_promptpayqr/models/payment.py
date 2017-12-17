@@ -60,7 +60,7 @@ class PromptpayPaymentAcquirer(models.Model):
 
 class PromptpayPaymentTransaction(models.Model):
     _inherit = 'payment.transaction'
-    promptpay_qrcode = fields.Char('QRcode', default='Initial QR',required=True, help='Internal reference of the TX')
+    promptpay_qrcode = fields.Char('QRcode', default='Invalid QR',required=True, help='Internal reference of the TX')
     
     @api.model
     def _promptpayqr_form_get_tx_from_data(self, data):
@@ -82,7 +82,12 @@ class PromptpayPaymentTransaction(models.Model):
         qr_string = self._get_promptpayqr_str(str(tx_prompt_id),str(amount))
        
         # for passing QRcode string to view
-        tx['promptpay_qrcode'] = str(qr_string)
+        if qr_string != False:
+            tx['promptpay_qrcode'] = str(qr_string)
+        else:
+            error_msg = 'invalid QR code after pending process'
+            _logger.info(error_msg)
+            raise ValidationError(error_msg)
         return tx
 
     def _promptpayqr_form_get_invalid_parameters(self, data):
@@ -103,9 +108,15 @@ class PromptpayPaymentTransaction(models.Model):
         promptpay_amount = ""
         promptpay_chksum = ""
 
-        if len(acc_id) == 15:
-            promptpay_acc_id = "0315" + acc_id
-        elif len(acc_id) == 13:
+        # Check if amount is valid
+        amount_numeric = float(amount)
+        if amount_numeric <= 0:
+            error_msg = "Invalid Amount"
+            _logger.info(error_msg)
+            return False
+        
+        # Check if ID is valid
+        if len(acc_id) == 13:
             promptpay_acc_id = "0213" + acc_id
         elif len(acc_id) == 10:
             promptpay_acc_id = "01130066" + acc_id[1:]
@@ -113,13 +124,14 @@ class PromptpayPaymentTransaction(models.Model):
             error_msg = "Invalid PromptPay ID"
             _logger.info(error_msg)
             return False
-
-        if len(amount) > 0 and len(amount) < 10:
+        
+        # Check for length of amount in string, make sure that length field will contain 2 charactors.
+        amount = '%.2f' % amount_numeric
+        if float(amount) > 0.0 and float(amount) < 10.0:
             promptpay_amount = '540' + str(len(amount)) + amount
-        elif len(amount) > 0 and len(amount) >= 10:
+        elif float(amount) > 0.0 and float(amount) >= 10.0:
             promptpay_amount = '54' + str(len(amount)) + amount  
-        else:
-            promptpay_amount = ''
+        
         # _ = emvco
         _version = '000201'
         _qr_type = '010211'
