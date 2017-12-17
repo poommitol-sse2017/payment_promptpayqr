@@ -14,7 +14,7 @@
         'data/payment_acquirer_data.xml',
     ],
     'images': [
-        'static/src/img/promptpay_200px.jpg',
+        'static/description/banner.png',
     ],
     'installable': True,
     'auto_install': False,
